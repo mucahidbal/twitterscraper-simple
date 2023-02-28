@@ -11,7 +11,7 @@ class Scraper:
     def __init__(self, driver_path: str):
         self.driver = self.prepare_driver(driver_path)
 
-    def retrieve_tweets(self, username: str, scroll_count: int = 1) -> list[dict] | None:
+    def retrieve_tweets(self, username: str, scroll_count: int = 1) -> list[dict]:
         tweets = []
 
         self.driver.get('https://twitter.com/i/user/' + self.find_user_id(username))
@@ -21,7 +21,7 @@ class Scraper:
 
         if not account_data['data']['user'] or account_data['data']['user']['result']['__typename'] != 'User':
             del self.driver.requests
-            return None
+            return tweets
 
         time.sleep(10)
 
