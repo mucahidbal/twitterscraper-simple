@@ -1,4 +1,3 @@
-import time
 import json
 from datetime import datetime
 from selenium.webdriver.chrome.service import Service
@@ -25,8 +24,6 @@ class Scraper:
         if not account_data['data']['user'] or account_data['data']['user']['result']['__typename'] != 'User':
             del self.driver.requests
             return tweets
-
-        time.sleep(10)
 
         for i in range(scroll_count):
             request = self.driver.wait_for_request('UserTweets')
