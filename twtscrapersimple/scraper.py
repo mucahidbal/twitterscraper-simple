@@ -14,7 +14,10 @@ class Scraper:
     def retrieve_tweets(self, username: str, scroll_count: int = 1) -> list[dict]:
         tweets = []
 
-        self.driver.get('https://twitter.com/' + username)
+        if username:
+            self.driver.get('https://twitter.com/' + username)
+        else:
+            raise ValueError
 
         account_data_request = self.driver.wait_for_request('UserByRestId')
         account_data = json.loads(decode(account_data_request.response.body, account_data_request.response.headers.get('Content-Encoding')))
