@@ -75,7 +75,9 @@ class Scraper:
     def prepare_driver(driver_path: str) -> webdriver.Chrome:
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
-        return webdriver.Chrome(service=Service(driver_path), options=chrome_options)
+        driver = webdriver.Chrome(service=Service(driver_path), options=chrome_options)
+        driver.scopes = [r'.*api\.twitter\.com.*']
+        return driver
 
     @staticmethod
     def _convert_to_datetime(date: str) -> datetime:
