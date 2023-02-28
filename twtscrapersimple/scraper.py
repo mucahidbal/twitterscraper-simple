@@ -68,7 +68,7 @@ class Scraper:
 
         try:
             return account_data['data']['user']['result']['rest_id']
-        except:
+        except KeyError:
             return ''
 
     @staticmethod
