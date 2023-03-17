@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from typing import TYPE_CHECKING
+from pydash.objects import get
 from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import TimeoutException
 from seleniumwire import webdriver
@@ -39,26 +40,25 @@ class Scraper:
 
             data = json.loads(decode(request.response.body, request.response.headers.get('Content-Encoding')))
 
-            for timeline_data in data['data']['user']['result']['timeline_v2']['timeline']['instructions']:
-                if timeline_data['type'] != 'TimelineAddEntries':
+            for timeline_data in get(data, 'data.user.result.timeline_v2.timeline.instructions', []):
+                if get(timeline_data, 'type') != 'TimelineAddEntries':
                     continue
 
-                for tweet_data in timeline_data['entries']:
-                    if tweet_data['content']['entryType'] == 'TimelineTimelineItem' and tweet_data['content']['itemContent']['tweet_results']['result']['__typename'] == 'Tweet':
-                        data = {
-                            'full_text': None
+                for tweet_data in get(timeline_data, 'entries'):
+                    if get(tweet_data, 'content.entryType') != 'TimelineTimelineItem':
+                        continue
+
+                    tweet_result = get(tweet_data, 'content.itemContent.tweet_results.result')
+
+                    if get(tweet_result, '__typename') != 'Tweet':
+                        continue
+
+                    tweets.append(
+                        {
+                            'full_text': get(tweet_result, 'legacy.full_text'),
+                            'date': self._convert_to_datetime(get(tweet_result, 'legacy.created_at', ''))
                         }
-
-                        tweet_date = self._convert_to_datetime(tweet_data['content']['itemContent']['tweet_results']['result']['legacy']['created_at'])
-
-                        data['date'] = tweet_date
-
-                        if 'full_text' in tweet_data['content']['itemContent']['tweet_results']['result']['legacy']:
-                            tweet_text = tweet_data['content']['itemContent']['tweet_results']['result']['legacy']['full_text']
-
-                            data['full_text'] = tweet_text
-
-                        tweets.append(data)
+                    )
 
             del self.driver.requests
 
