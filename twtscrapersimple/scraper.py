@@ -1,16 +1,21 @@
+from __future__ import annotations
 import json
 from datetime import datetime
+from typing import TYPE_CHECKING
 from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import TimeoutException
 from seleniumwire import webdriver
 from seleniumwire.utils import decode
+
+if TYPE_CHECKING:
+    from seleniumwire.request import Request
 
 
 class Scraper:
     def __init__(self, driver_path: str):
         self.driver = self.prepare_driver(driver_path)
 
-    def retrieve_tweets(self, username: str = '', user_id: str = '', scroll_count: int = 1) -> list[dict]|None:
+    def retrieve_tweets(self, username: str = '', user_id: str = '', scroll_count: int = 1) -> list[dict] | None:
         tweets = []
 
         if username:
@@ -20,9 +25,9 @@ class Scraper:
         else:
             raise ValueError
 
-        try:
-            account_data_request = self.driver.wait_for_request('UserByRestId')
-        except TimeoutException:
+        account_data_request = self.wait_for_request('UserByRestId')
+
+        if not account_data_request:
             del self.driver.requests
             return None
 
@@ -33,9 +38,9 @@ class Scraper:
             return tweets
 
         for i in range(scroll_count):
-            try:
-                request = self.driver.wait_for_request('UserTweets')
-            except TimeoutException:
+            request = self.wait_for_request('UserTweets')
+
+            if not request:
                 return tweets
 
             data = json.loads(decode(request.response.body, request.response.headers.get('Content-Encoding')))
@@ -70,9 +75,10 @@ class Scraper:
 
     def find_user_id(self, twitter_username: str) -> str:
         self.driver.get('https://twitter.com/' + twitter_username)
-        try:
-            account_data_request = self.driver.wait_for_request('UserByScreenName', timeout=20)
-        except TimeoutException:
+
+        account_data_request = self.wait_for_request('UserByScreenName', 20)
+
+        if not account_data_request:
             return ''
 
         account_data = json.loads(decode(account_data_request.response.body, account_data_request.response.headers.get('Content-Encoding')))
@@ -81,6 +87,12 @@ class Scraper:
             return account_data['data']['user']['result']['rest_id']
         except KeyError:
             return ''
+
+    def wait_for_request(self, request_pattern: str, timeout: int = 10) -> Request | None:
+        try:
+            return self.driver.wait_for_request(request_pattern, timeout=timeout)
+        except TimeoutException:
+            return None
 
     @staticmethod
     def prepare_driver(driver_path: str) -> webdriver.Chrome:
