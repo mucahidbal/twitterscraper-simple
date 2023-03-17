@@ -10,11 +10,13 @@ class Scraper:
     def __init__(self, driver_path: str):
         self.driver = self.prepare_driver(driver_path)
 
-    def retrieve_tweets(self, username: str, scroll_count: int = 1) -> list[dict]:
+    def retrieve_tweets(self, username: str = '', user_id: str = '', scroll_count: int = 1) -> list[dict]|None:
         tweets = []
 
         if username:
             self.driver.get('https://twitter.com/' + username)
+        elif user_id:
+            self.driver.get('https://twitter.com/i/user/' + user_id)
         else:
             raise ValueError
 
@@ -85,7 +87,7 @@ class Scraper:
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         driver = webdriver.Chrome(service=Service(driver_path), options=chrome_options)
-        driver.scopes = [r'.*api\.twitter\.com.*']
+        driver.scopes = [r'.*twitter[.]com.*']
         return driver
 
     @staticmethod
