@@ -82,7 +82,3 @@ class Scraper:
     @staticmethod
     def _convert_to_datetime(date: str) -> datetime:
         return datetime.strptime(date, '%a %b %d %H:%M:%S %z %Y')
-
-    @staticmethod
-    def _convert_to_mysql_date(date: datetime) -> str:
-        return date.strftime('%Y-%m-%d %H:%M:%S')
