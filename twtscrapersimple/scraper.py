@@ -72,15 +72,11 @@ class Scraper:
 
         account_data_request = self.wait_for_request('UserByScreenName', 20)
 
-        if not account_data_request:
-            return ''
+        if account_data_request:
+            account_data = json.loads(decode(account_data_request.response.body, account_data_request.response.headers.get('Content-Encoding')))
+            return get(account_data, 'data.user.result.rest_id', '')
 
-        account_data = json.loads(decode(account_data_request.response.body, account_data_request.response.headers.get('Content-Encoding')))
-
-        try:
-            return account_data['data']['user']['result']['rest_id']
-        except KeyError:
-            return ''
+        return ''
 
     def wait_for_request(self, request_pattern: str, timeout: int = 10) -> Request | None:
         try:
