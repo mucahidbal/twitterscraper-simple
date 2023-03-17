@@ -26,16 +26,12 @@ class Scraper:
         else:
             raise ValueError
 
-        account_data_request = self.wait_for_request('UserByRestId')
-
-        if not account_data_request:
+        if not self.wait_for_request('UserByRestId'):
             del self.driver.requests
             return None
 
         for i in range(scroll_count):
-            request = self.wait_for_request('UserTweets')
-
-            if not request:
+            if not (request := self.wait_for_request('UserTweets')):
                 return tweets
 
             data = json.loads(decode(request.response.body, request.response.headers.get('Content-Encoding')))
@@ -70,9 +66,7 @@ class Scraper:
     def find_user_id(self, twitter_username: str) -> str:
         self.driver.get('https://twitter.com/' + twitter_username)
 
-        account_data_request = self.wait_for_request('UserByScreenName', 20)
-
-        if account_data_request:
+        if account_data_request := self.wait_for_request('UserByScreenName', 20):
             account_data = json.loads(decode(account_data_request.response.body, account_data_request.response.headers.get('Content-Encoding')))
             return get(account_data, 'data.user.result.rest_id', '')
 
