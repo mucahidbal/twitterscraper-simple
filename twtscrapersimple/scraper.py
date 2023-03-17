@@ -31,12 +31,6 @@ class Scraper:
             del self.driver.requests
             return None
 
-        account_data = json.loads(decode(account_data_request.response.body, account_data_request.response.headers.get('Content-Encoding')))
-
-        if not account_data['data']['user'] or account_data['data']['user']['result']['__typename'] != 'User':
-            del self.driver.requests
-            return tweets
-
         for i in range(scroll_count):
             request = self.wait_for_request('UserTweets')
 
