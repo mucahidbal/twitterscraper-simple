@@ -18,7 +18,12 @@ class Scraper:
         else:
             raise ValueError
 
-        account_data_request = self.driver.wait_for_request('UserByRestId')
+        try:
+            account_data_request = self.driver.wait_for_request('UserByRestId')
+        except TimeoutException:
+            del self.driver.requests
+            return None
+
         account_data = json.loads(decode(account_data_request.response.body, account_data_request.response.headers.get('Content-Encoding')))
 
         if not account_data['data']['user'] or account_data['data']['user']['result']['__typename'] != 'User':
@@ -26,7 +31,11 @@ class Scraper:
             return tweets
 
         for i in range(scroll_count):
-            request = self.driver.wait_for_request('UserTweets')
+            try:
+                request = self.driver.wait_for_request('UserTweets')
+            except TimeoutException:
+                return tweets
+
             data = json.loads(decode(request.response.body, request.response.headers.get('Content-Encoding')))
 
             for timeline_data in data['data']['user']['result']['timeline_v2']['timeline']['instructions']:
