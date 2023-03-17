@@ -97,5 +97,8 @@ class Scraper:
         return driver
 
     @staticmethod
-    def _convert_to_datetime(date: str) -> datetime:
-        return datetime.strptime(date, '%a %b %d %H:%M:%S %z %Y')
+    def _convert_to_datetime(date: str) -> datetime | None:
+        try:
+            return datetime.strptime(date, '%a %b %d %H:%M:%S %z %Y')
+        except ValueError:
+            return None
