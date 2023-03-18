@@ -29,7 +29,7 @@ class Scraper:
 
         return self.get_tweets_by_page(page_count)
 
-    def get_tweets_by_page(self, page_count):
+    def get_tweets_by_page(self, page_count) -> list[dict]:
         tweets = []
         for i in range(page_count):
             if not (scraped := self.scrape_tweets()):
@@ -42,7 +42,7 @@ class Scraper:
 
         return tweets
 
-    def scrape_tweets(self):
+    def scrape_tweets(self) -> list[dict]:
         if not (data := self.wait_for_request('UserTweets')):
             return []
 
@@ -77,7 +77,7 @@ class Scraper:
 
         return ''
 
-    def wait_for_request(self, request_pattern: str, timeout: int = 10, clear_requests: bool = True) -> dict:
+    def wait_for_request(self, request_pattern: str, timeout: int = 10, clear_requests: bool = True) -> dict | None:
         try:
             response = self.driver.wait_for_request(request_pattern, timeout=timeout).response
             body = json.loads(decode(response.body, response.headers.get('Content-Encoding')))
