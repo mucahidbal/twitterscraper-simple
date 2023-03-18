@@ -24,8 +24,7 @@ class Scraper:
         else:
             raise ValueError
 
-        if not self.wait_for_request('UserByRestId'):
-            self.clear_requests()
+        if not self.wait_for_request('UserByRestId', clear_requests=False):
             return None
 
         return self.get_tweets_by_page(page_count)
@@ -37,8 +36,6 @@ class Scraper:
                 return tweets
 
             tweets.extend(self.extract_tweet_data(data))
-
-            self.clear_requests()
 
             if i < page_count - 1:
                 self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -73,20 +70,21 @@ class Scraper:
         self.driver.get('https://twitter.com/' + twitter_username)
 
         if account_data := self.wait_for_request('UserByScreenName', 20):
-            self.clear_requests()
             return get(account_data, 'data.user.result.rest_id', '')
 
         return ''
 
-    def clear_requests(self):
-        del self.driver.requests
-
-    def wait_for_request(self, request_pattern: str, timeout: int = 10) -> dict:
+    def wait_for_request(self, request_pattern: str, timeout: int = 10, clear_requests: bool = True) -> dict:
         try:
-            request = self.driver.wait_for_request(request_pattern, timeout=timeout)
-            return json.loads(decode(request.response.body, request.response.headers.get('Content-Encoding')))
+            response = self.driver.wait_for_request(request_pattern, timeout=timeout).response
+            body = json.loads(decode(response.body, response.headers.get('Content-Encoding')))
         except (TimeoutException, json.JSONDecodeError, TypeError):
-            return None
+            body = None
+        
+        if clear_requests:
+            del self.driver.requests
+
+        return body
 
     @staticmethod
     def prepare_driver(driver_path: str) -> webdriver.Chrome:
