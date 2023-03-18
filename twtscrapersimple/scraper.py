@@ -31,10 +31,8 @@ class Scraper:
             return None
 
         for i in range(scroll_count):
-            if not (request := self.wait_for_request('UserTweets')):
+            if not (data := self.wait_for_request('UserTweets')):
                 return tweets
-
-            data = json.loads(decode(request.response.body, request.response.headers.get('Content-Encoding')))
 
             for timeline_data in get(data, 'data.user.result.timeline_v2.timeline.instructions', []):
                 if get(timeline_data, 'type') != 'TimelineAddEntries':
@@ -66,15 +64,15 @@ class Scraper:
     def find_user_id(self, twitter_username: str) -> str:
         self.driver.get('https://twitter.com/' + twitter_username)
 
-        if account_data_request := self.wait_for_request('UserByScreenName', 20):
-            account_data = json.loads(decode(account_data_request.response.body, account_data_request.response.headers.get('Content-Encoding')))
+        if account_data := self.wait_for_request('UserByScreenName', 20):
             return get(account_data, 'data.user.result.rest_id', '')
 
         return ''
 
-    def wait_for_request(self, request_pattern: str, timeout: int = 10) -> Request | None:
+    def wait_for_request(self, request_pattern: str, timeout: int = 10) -> dict:
         try:
-            return self.driver.wait_for_request(request_pattern, timeout=timeout)
+            request = self.driver.wait_for_request(request_pattern, timeout=timeout)
+            return json.loads(decode(request.response.body, request.response.headers.get('Content-Encoding')))
         except TimeoutException:
             return None
 
