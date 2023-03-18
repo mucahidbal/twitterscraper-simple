@@ -73,7 +73,7 @@ class Scraper:
         try:
             request = self.driver.wait_for_request(request_pattern, timeout=timeout)
             return json.loads(decode(request.response.body, request.response.headers.get('Content-Encoding')))
-        except TimeoutException:
+        except (TimeoutException, json.JSONDecodeError, TypeError):
             return None
 
     @staticmethod
