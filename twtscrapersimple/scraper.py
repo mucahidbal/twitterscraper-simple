@@ -16,7 +16,7 @@ class Scraper:
     def __init__(self, driver_path: str):
         self.driver = self.prepare_driver(driver_path)
 
-    def retrieve_tweets(self, username: str = '', user_id: str = '', page_count: int = 1) -> list[dict] | None:
+    def get_tweets(self, username: str = '', user_id: str = '', page_count: int = 1) -> list[dict] | None:
         if username:
             self.driver.get('https://twitter.com/' + username)
         elif user_id:
@@ -33,7 +33,7 @@ class Scraper:
             if not (data := self.wait_for_request('UserTweets')):
                 return tweets
 
-            tweets.extend(self.extract_tweets(data))
+            tweets.extend(self.extract_tweet_data(data))
 
             self.clear_requests()
 
@@ -42,7 +42,7 @@ class Scraper:
 
         return tweets
 
-    def extract_tweets(self, data: dict):
+    def extract_tweet_data(self, data: dict):
         tweets = []
         for timeline_data in get(data, 'data.user.result.timeline_v2.timeline.instructions', []):
             if get(timeline_data, 'type') != 'TimelineAddEntries':
