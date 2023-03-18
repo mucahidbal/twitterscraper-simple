@@ -28,6 +28,9 @@ class Scraper:
             self.clear_requests()
             return None
 
+        return self.get_tweets_by_page(page_count)
+
+    def get_tweets_by_page(self, page_count):
         tweets = []
         for i in range(page_count):
             if not (data := self.wait_for_request('UserTweets')):
