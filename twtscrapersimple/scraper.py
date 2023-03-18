@@ -16,9 +16,7 @@ class Scraper:
     def __init__(self, driver_path: str):
         self.driver = self.prepare_driver(driver_path)
 
-    def retrieve_tweets(self, username: str = '', user_id: str = '', scroll_count: int = 1) -> list[dict] | None:
-        tweets = []
-
+    def retrieve_tweets(self, username: str = '', user_id: str = '', page_count: int = 1) -> list[dict] | None:
         if username:
             self.driver.get('https://twitter.com/' + username)
         elif user_id:
@@ -30,7 +28,9 @@ class Scraper:
             del self.driver.requests
             return None
 
-        for i in range(scroll_count):
+        tweets = []
+
+        for i in range(page_count):
             if not (data := self.wait_for_request('UserTweets')):
                 return tweets
 
@@ -56,7 +56,7 @@ class Scraper:
 
             del self.driver.requests
 
-            if i < scroll_count - 1:
+            if i < page_count - 1:
                 self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
         return tweets
