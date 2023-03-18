@@ -32,17 +32,20 @@ class Scraper:
     def get_tweets_by_page(self, page_count):
         tweets = []
         for i in range(page_count):
-            if not (data := self.wait_for_request('UserTweets')):
-                return tweets
+            if not (scraped := self.scrape_tweets()):
+                break
 
-            tweets.extend(self.extract_tweet_data(data))
+            tweets.extend(scraped)
 
             if i < page_count - 1:
                 self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
         return tweets
 
-    def extract_tweet_data(self, data: dict):
+    def scrape_tweets(self):
+        if not (data := self.wait_for_request('UserTweets')):
+            return []
+
         tweets = []
         for timeline_data in get(data, 'data.user.result.timeline_v2.timeline.instructions', []):
             if get(timeline_data, 'type') != 'TimelineAddEntries':
