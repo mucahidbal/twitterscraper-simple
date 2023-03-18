@@ -29,7 +29,7 @@ class Scraper:
 
         return self.get_tweets_by_page(page_count)
 
-    def get_tweets_by_page(self, page_count) -> list[dict]:
+    def get_tweets_by_page(self, page_count: int) -> list[dict]:
         tweets = []
         for i in range(page_count):
             if not (scraped := self.scrape_tweets()):
