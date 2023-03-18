@@ -25,39 +25,44 @@ class Scraper:
             raise ValueError
 
         if not self.wait_for_request('UserByRestId'):
-            del self.driver.requests
+            self.clear_requests()
             return None
 
         tweets = []
-
         for i in range(page_count):
             if not (data := self.wait_for_request('UserTweets')):
                 return tweets
 
-            for timeline_data in get(data, 'data.user.result.timeline_v2.timeline.instructions', []):
-                if get(timeline_data, 'type') != 'TimelineAddEntries':
-                    continue
+            tweets.extend(self.extract_tweets(data))
 
-                for tweet_data in get(timeline_data, 'entries'):
-                    if get(tweet_data, 'content.entryType') != 'TimelineTimelineItem':
-                        continue
-
-                    tweet_result = get(tweet_data, 'content.itemContent.tweet_results.result')
-
-                    if get(tweet_result, '__typename') != 'Tweet':
-                        continue
-
-                    tweets.append(
-                        {
-                            'full_text': get(tweet_result, 'legacy.full_text'),
-                            'date': self._convert_to_datetime(get(tweet_result, 'legacy.created_at', ''))
-                        }
-                    )
-
-            del self.driver.requests
+            self.clear_requests()
 
             if i < page_count - 1:
                 self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+        return tweets
+
+    def extract_tweets(self, data: dict):
+        tweets = []
+        for timeline_data in get(data, 'data.user.result.timeline_v2.timeline.instructions', []):
+            if get(timeline_data, 'type') != 'TimelineAddEntries':
+                continue
+
+            for tweet_data in get(timeline_data, 'entries'):
+                if get(tweet_data, 'content.entryType') != 'TimelineTimelineItem':
+                    continue
+
+                tweet_result = get(tweet_data, 'content.itemContent.tweet_results.result')
+
+                if get(tweet_result, '__typename') != 'Tweet':
+                    continue
+
+                tweets.append(
+                    {
+                        'full_text': get(tweet_result, 'legacy.full_text'),
+                        'date': self._convert_to_datetime(get(tweet_result, 'legacy.created_at', ''))
+                    }
+                )
 
         return tweets
 
@@ -65,9 +70,13 @@ class Scraper:
         self.driver.get('https://twitter.com/' + twitter_username)
 
         if account_data := self.wait_for_request('UserByScreenName', 20):
+            self.clear_requests()
             return get(account_data, 'data.user.result.rest_id', '')
 
         return ''
+
+    def clear_requests(self):
+        del self.driver.requests
 
     def wait_for_request(self, request_pattern: str, timeout: int = 10) -> dict:
         try:
