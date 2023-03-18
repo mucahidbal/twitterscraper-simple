@@ -51,7 +51,7 @@ class Scraper:
             if get(timeline_data, 'type') != 'TimelineAddEntries':
                 continue
 
-            for tweet_data in get(timeline_data, 'entries'):
+            for tweet_data in get(timeline_data, 'entries', []):
                 if get(tweet_data, 'content.entryType') != 'TimelineTimelineItem':
                     continue
 
