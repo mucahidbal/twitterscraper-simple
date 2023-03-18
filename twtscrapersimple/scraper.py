@@ -8,9 +8,6 @@ from selenium.common.exceptions import TimeoutException
 from seleniumwire import webdriver
 from seleniumwire.utils import decode
 
-if TYPE_CHECKING:
-    from seleniumwire.request import Request
-
 
 class Scraper:
     def __init__(self, driver_path: str):
