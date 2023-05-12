@@ -11,36 +11,36 @@ from seleniumwire.utils import decode
 
 class Scraper:
     def __init__(self, driver_path: str):
-        self.driver = self.prepare_driver(driver_path)
+        self._driver = self._prepare_driver(driver_path)
 
     def get_tweets(self, username: str = '', user_id: str = '', page_count: int = 1) -> list[dict] | None:
         if username:
-            self.driver.get('https://twitter.com/' + username)
+            self._driver.get('https://twitter.com/' + username)
         elif user_id:
-            self.driver.get('https://twitter.com/i/user/' + user_id)
+            self._driver.get('https://twitter.com/i/user/' + user_id)
         else:
             raise ValueError
 
-        if not self.wait_for_request('UserByRestId', clear_requests=False):
+        if not self._wait_for_request('UserByRestId', clear_requests=False):
             return None
 
-        return self.get_tweets_by_page(page_count)
+        return self._get_tweets_by_page(page_count)
 
-    def get_tweets_by_page(self, page_count: int) -> list[dict]:
+    def _get_tweets_by_page(self, page_count: int) -> list[dict]:
         tweets = []
         for i in range(page_count):
-            if not (scraped := self.scrape_tweets()):
+            if not (scraped := self._scrape_tweets()):
                 break
 
             tweets.extend(scraped)
 
             if i < page_count - 1:
-                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                self._driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
         return tweets
 
-    def scrape_tweets(self) -> list[dict]:
-        if not (data := self.wait_for_request('UserTweets')):
+    def _scrape_tweets(self) -> list[dict]:
+        if not (data := self._wait_for_request('UserTweets')):
             return []
 
         tweets = []
@@ -67,27 +67,27 @@ class Scraper:
         return tweets
 
     def find_user_id(self, twitter_username: str) -> str:
-        self.driver.get('https://twitter.com/' + twitter_username)
+        self._driver.get('https://twitter.com/' + twitter_username)
 
-        if account_data := self.wait_for_request('UserByScreenName', 20):
+        if account_data := self._wait_for_request('UserByScreenName', 20):
             return get(account_data, 'data.user.result.rest_id', '')
 
         return ''
 
-    def wait_for_request(self, request_pattern: str, timeout: int = 10, clear_requests: bool = True) -> dict | None:
+    def _wait_for_request(self, request_pattern: str, timeout: int = 10, clear_requests: bool = True) -> dict | None:
         try:
-            response = self.driver.wait_for_request(request_pattern, timeout=timeout).response
+            response = self._driver.wait_for_request(request_pattern, timeout=timeout).response
             body = json.loads(decode(response.body, response.headers.get('Content-Encoding')))
         except (TimeoutException, json.JSONDecodeError, TypeError):
             body = None
         
         if clear_requests:
-            del self.driver.requests
+            del self._driver.requests
 
         return body
 
     @staticmethod
-    def prepare_driver(driver_path: str) -> webdriver.Chrome:
+    def _prepare_driver(driver_path: str) -> webdriver.Chrome:
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
         driver = webdriver.Chrome(service=Service(driver_path), options=chrome_options)
